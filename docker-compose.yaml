@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: employee_db
+    ports:
+      - "5432:5432"
+    # CRITICAL: This saves your data even if you delete the container
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # Senior Tip: Add a Healthcheck to ensure DB is actually ready
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d employee_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    container_name: fastapi_app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

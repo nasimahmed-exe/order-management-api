@@ -4,19 +4,17 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
-
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sqlalchemy import create_engine
 from app.core.config import settings
-from app.db.base import Base
+from app.db.base_class import Base
 from app.model.user import User
 from app.model.order import Order
-from app.model.lineItem import LineItem
-from app.model.idempotency import IdempotencyKey
 from app.model.product import Product
 from app.model.refresh_token import RefreshToken
+from app.model.idempotency import IdempotencyKey
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

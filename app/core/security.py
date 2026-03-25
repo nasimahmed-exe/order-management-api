@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from jose import jwt,JWTError
 from app.model.user import User
-from app.core.config import Settings
+from app.core.config import settings
 
 
 
@@ -24,11 +24,11 @@ def verify_password(password,hashing_password)-> bool:
 
 
 
-def  create_access_token(data: dict)->str:
+def create_access_token(data: dict) -> str:
     to_encode = data.copy()
-    expire_time = datetime.utcnow() + timedelta(minutes=Settings.ACCESS_TOKEN_EXPIRED_TIME)
+    expire_time = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire_time})
-    return jwt.encode(to_encode,Settings.SECRET_KEY,algorithm=Settings.ALGORITHOM)
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
 
@@ -41,7 +41,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 def get_current_user(token: str = Depends(oauth2_scheme),db: Session = Depends(deps.get_db)):
 
     try:
-        token_verify = jwt.decode(token,Settings.SECRET_KEY,algorithms=Settings.ALGORITHOM)   
+        token_verify = jwt.decode(token,settings.SECRET_KEY,algorithms=[settings.ALGORITHM])   
         user_id = token_verify.get("sub")
         if not user_id:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED

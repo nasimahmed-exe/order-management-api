@@ -3,11 +3,14 @@ from sqlalchemy.orm import Session
 from app.api import deps
 from app.schema.product import ProductCreate, ProductRead
 from app.model.product import Product
+from fastapi import Request
+from app.core.limiter import limiter
 
 router = APIRouter()
 
 @router.post("/", response_model=ProductRead, status_code=status.HTTP_201_CREATED)
-def create_product(product_in: ProductCreate, db: Session = Depends(deps.get_db)):
+@limiter.limit("100/minute")
+def create_product(*,request: Request,product_in: ProductCreate, db: Session = Depends(deps.get_db)):
     db_product = Product(
         name=product_in.name,
         description=product_in.description,

@@ -14,12 +14,14 @@ from app.crud.crud_refresh_token import create_refresh_token,verify_refresh_toke
 import logging
 import logging
 from fastapi import Request
+from app.core.limiter import limiter
 logger = logging.getLogger(__name__)
 
 
 router = APIRouter()
 
 @router.post("/login",response_model = LoginResponse,status_code=status.HTTP_201_CREATED)
+@limiter.limit("5/minute")
 def login(*,request: Request,db: Session = Depends(deps.get_db),obj_in:OAuth2PasswordRequestForm=Depends()):
 
     correlation_id = request.state.correlation_id

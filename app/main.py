@@ -11,16 +11,26 @@ from app.core.error_handlers import (
     unexpected_exception_error_handler
 )
 
+from slowapi import _rate_limit_exceeded_handler
+from app.core.limiter import limiter
+from slowapi.errors import RateLimitExceeded
+
 
 
 Base.metadata.create_all(bind=engine)
 setup_logging()
+
+
+
+
 
 app = FastAPI()
 app.add_middleware(CorrelationIDMiddleware)
 app.add_exception_handler(HTTPException,http_exception_error_handler)
 app.add_exception_handler(RequestValidationError,validation_error_handler)
 app.add_exception_handler(Exception,unexpected_exception_error_handler)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded,_rate_limit_exceeded_handler)
 
 
 

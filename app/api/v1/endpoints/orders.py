@@ -6,11 +6,13 @@ from app.api import deps
 from app.schema.order import OrderCreate, OrderRead
 from app.crud.crud_order import create_order
 from app.crud.crud_idempotency import get_idempotency_key, save_idempotency_record
-
+from fastapi import Request
+from app.core.limiter import limiter
 router = APIRouter()
 
 @router.post("/",response_model = OrderRead,status_code=status.HTTP_201_CREATED)
-def checkout(*,db: Session = Depends(deps.get_db),
+@limiter.limit("10/minute")
+def checkout(*,request: Request,db: Session = Depends(deps.get_db),
                        idempotency_key: str = Header(...,alias="Idempotency-Key"),
                        order_in: OrderCreate):
     

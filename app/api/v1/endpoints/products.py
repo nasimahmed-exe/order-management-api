@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, status,Query
+from sqlalchemy.orm import Session,selectinload
 from app.api import deps
 from app.schema.product import ProductCreate, ProductRead
 from app.model.product import Product
@@ -23,3 +23,21 @@ def create_product(*,request: Request,product_in: ProductCreate, db: Session = D
     db.commit()
     db.refresh(db_product)
     return db_product
+
+
+@router.get("/products")
+def selectinload_and_pagination_check(*,
+                                      db: Session = Depends(deps.get_db),
+                                      skip: int = Query(default=0,ge = 0),
+                                      limit: int = Query(default=20,ge = 1,le = 100)):
+    
+    products = db.query(Product).options(selectinload(Product.line_items)).offset(skip).limit(limit).all()
+    total_count = db.query(Product).count()
+    return {
+        "Total_product_count": total_count,
+        "skip": skip,
+        "limit": limit,
+        "has_more": (skip + limit) < total_count,
+        "data": products
+    }
+    

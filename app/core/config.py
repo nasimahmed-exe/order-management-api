@@ -30,6 +30,11 @@ class Settings(BaseSettings):
     # 4. CORS (Universal Flexibility)
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000"]
 
+    REDIS_HOST: str = "redis"
+    REDIS_PORT: int = 6379
+
+
+
     # Configuration for .env loading
     model_config = SettingsConfigDict(
         env_file=".env", 

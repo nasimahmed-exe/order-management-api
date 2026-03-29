@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, status,Query
+from sqlalchemy.orm import Session,selectinload
 from app.api import deps
 from app.schema.user import UserCreate, UserRead
 from app.model.user import User
@@ -7,6 +7,7 @@ from app.model.refresh_token import RefreshToken
 from app.crud.crud_user import requier_admin
 from app.core.security import hashing_password
 from datetime import datetime,timezone
+
 
 router = APIRouter()
 
@@ -68,5 +69,24 @@ def delete_user(
     user.deleted_at = datetime.now(timezone.utc)
     db.commit()
     return {"message": "User deleted"}
+
+
+@router.get("/users")
+def selectinload_and_pagination_check(*,
+                                      skip: int = Query(default = 0,ge = 0),
+                                      limit: int = Query(default=0,ge = 1,le = 100),
+                                      db: Session = Depends(deps.get_db)):
+    
+    users = db.query(User).filter(User.is_deleted == False).options(selectinload(User.orders)).offset(skip).limit(limit).all()
+    Total_count = db.query(User).filter(User.is_deleted == False).count()
+
+    return {
+        "Total_user_count": Total_count,
+        "Skip": skip,
+        "Limit": limit,
+        "has_more": (skip + limit)< Total_count,
+        "data": users
+    }
+    
 
 

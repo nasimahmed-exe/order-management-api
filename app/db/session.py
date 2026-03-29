@@ -7,7 +7,8 @@ engine = create_engine(
     settings.SQLALCHEMY_DATABASE_URI,
     pool_timeout=30,
     pool_recycle=1800,
-    pool_pre_ping=True
+    pool_pre_ping=True,
+    
 )
 
 # The Factory: Creates a new 'db' instance for every request

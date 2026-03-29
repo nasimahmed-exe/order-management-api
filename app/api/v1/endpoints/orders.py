@@ -1,12 +1,15 @@
 import json
-from fastapi import APIRouter, Depends, HTTPException, Header, status
+from fastapi import APIRouter, Depends, HTTPException, Header, status,Query
 from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session,selectinload,joinedload
 from app.api import deps
 from app.schema.order import OrderCreate, OrderRead
 from app.crud.crud_order import create_order
 from app.crud.crud_idempotency import get_idempotency_key, save_idempotency_record
 from fastapi import Request
+from app.model.order import Order
+from app.model.user import User
+
 from app.core.limiter import limiter
 router = APIRouter()
 
@@ -54,6 +57,27 @@ def checkout(*,request: Request,db: Session = Depends(deps.get_db),
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unexpected erorr occured during checkout"
         )
+
+
+
+
+
+@router.get("/selectinload")
+def selectinload_check(
+                       skip: int = Query(default = 0,ge = 0),
+                       limit: int = Query(default = 20, ge = 1, le = 100),
+                       db: Session = Depends(deps.get_db)):
+    total_order_count = db.query(Order).count()
+    orders = db.query(Order).options(selectinload(Order.items)).offset(skip).limit(limit).all()
+
+    return {
+        "total_count": total_order_count,
+        "skip": skip,
+        "limit": limit,
+        "has_more": skip + limit < total_order_count,
+        "data": orders
+    }
+     
 
 
 

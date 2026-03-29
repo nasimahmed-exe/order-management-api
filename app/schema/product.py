@@ -12,6 +12,12 @@ class ProductBase(BaseModel):
 class ProductCreate(ProductBase):
     
     pass
+class ProductUpdate(ProductBase):
+    name: str | None = None
+    description: str | None = None
+    price: float | None = None
+    stock_quantity: int | None = None
+
 
 class ProductRead(ProductBase):
    

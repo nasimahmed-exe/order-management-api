@@ -1,13 +1,16 @@
-from fastapi import APIRouter, Depends, status,Query
+from fastapi import APIRouter, Depends, status,Query,HTTPException
 from sqlalchemy.orm import Session,selectinload
 from app.api import deps
 from app.schema.product import ProductCreate, ProductRead
 from app.model.product import Product
+from app.schema.product import ProductUpdate
 from fastapi import Request
 from app.core.limiter import limiter
 from app.core.redis import redis_client
+
 import logging
 import json
+from app.cache import invalid_product_cache
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
@@ -25,8 +28,32 @@ def create_product(*,request: Request,product_in: ProductCreate, db: Session = D
     
     db.add(db_product)
     db.commit()
+    invalid_product_cache()
     db.refresh(db_product)
     return db_product
+
+
+@router.patch("/update_product")
+@limiter.limit("100/minute")
+def product_update(*,request: Request,db: Session = Depends(deps.get_db),product_id: int,product_in: ProductUpdate ):
+    db_product = db.query(Product).filter(Product.id == product_id).first()
+    if not db_product:
+        raise HTTPException(status_code=404, detail="product not found")
+    update_product = product_in.model_dump(exclude_unset=True)
+    for key,value in update_product.items():
+        setattr(db_product,key,value)
+
+    db.commit()
+    db.refresh(db_product)
+    invalid_product_cache()
+    return db_product
+       
+    
+
+
+
+
+
 
 
 @router.get("/products")

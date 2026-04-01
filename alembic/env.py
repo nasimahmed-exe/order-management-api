@@ -15,6 +15,7 @@ from app.model.order import Order
 from app.model.product import Product
 from app.model.refresh_token import RefreshToken
 from app.model.idempotency import IdempotencyKey
+from app.model.document import Document
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
